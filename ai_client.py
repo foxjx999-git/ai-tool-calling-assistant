@@ -8,6 +8,9 @@ from tool_schemas import tools
 
 load_dotenv()
 
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+
 client = OpenAI()
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1")
@@ -35,6 +38,8 @@ def ask_ai(user_input: str) -> str:
                 "当用户要求计算学习时长时，使用 calculate_study_hours。"
                 "当用户要求记录学习进度时，使用 save_learning_log。"
                 "当用户要求查看或总结学习记录时，使用 read_learning_logs。"
+                "当用户要求记录学习进度，但缺少学习时长、主题或总结时，不要调用 save_learning_log，要先追问用户补充信息。"
+                "如果工具返回 status 为 error，不要假装工具执行成功，要把错误原因告诉用户。"
                 "最终回答要用中文，简洁清楚。"
             ),
         },
@@ -50,8 +55,9 @@ def ask_ai(user_input: str) -> str:
             tools=tools,
         )
 
-        print("\n====== 模型返回 ======")
-        print(response.output)
+        if DEBUG:
+            print("\n====== 模型返回 ======")
+            print(response.output)
 
         input_list += response.output
 
@@ -67,15 +73,20 @@ def ask_ai(user_input: str) -> str:
             tool_name = tool_call.name
             
             arguments = json.loads(tool_call.arguments)
-
-            print("\n====== 模型请求调用工具 ======")
-            print("工具名：", tool_name)
-            print("参数：", arguments)
+            
+            if DEBUG:
+                print("\n====== 模型请求调用工具 ======")
+                print("工具名：", tool_name)
+                print("参数：", arguments)
 
             tool_result = run_tool(tool_name, arguments)
 
-            print("\n====== Python 执行工具结果 ======")
-            print(tool_result)
+            if DEBUG:
+                print("\n====== Python 执行工具结果 ======")
+                print(tool_result)
+
+            if tool_result.get("status") == "error":
+                return f"工具调用失败：{tool_result.get('message')}"
 
             input_list.append(
                 {
