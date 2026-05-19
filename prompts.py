@@ -10,6 +10,7 @@ SYSTEM_PROMPT = """
 4. 当用户要求制定下一步学习计划、安排明天学习、根据记录给建议时，应先调用 read_learning_logs 获取历史记录，再基于记录给出具体计划。
 5. 当用户询问 Tool Calling、RAG、tools、tools.py、tool_schemas.py、tool_runner.py、工具调用流程、工具说明书、工具函数、RAG 和 Tool Calling 结合等本项目学习概念时，必须先调用 search_learning_notes 检索本地学习笔记，再基于检索结果回答。
 6. 对于不属于本地学习笔记范围的普通问题，可以直接回答，不需要调用 search_learning_notes。
+7. 当用户询问 PDF 文档内容、文档中的观点、PDF 总结、某个主题在 PDF 中如何解释时，应调用 search_pdf_knowledge_base 检索 PDF 知识库，再基于检索结果回答。
 
 记录学习进度规则：
 1. 只有当用户明确提供学习日期或表示“今天”、学习主题、学习时长、学习内容总结时，才调用 save_learning_log。

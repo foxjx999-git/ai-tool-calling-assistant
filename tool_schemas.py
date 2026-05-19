@@ -101,5 +101,25 @@ tools = [
         },
         "strict": True,
     },
+    {
+        "type": "function",
+        "name": "search_pdf_knowledge_base",
+        "description": (
+            "从 PDF 知识库中检索相关内容。"
+            "当用户询问 PDF 文档内容、文档里的观点、文档总结、某个主题在 PDF 中如何解释时，使用这个工具。"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "用户想从 PDF 知识库中检索的问题或主题。",
+                },
+            },
+            "required": ["query"],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
     
 ]

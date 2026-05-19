@@ -2,6 +2,8 @@ import json
 import os 
 from datetime import datetime
 
+from pdf_rag import search_pdf_chunks
+
 def calculate_study_hours(days: int, hours_per_day: float) ->dict:
     total_hours = days * hours_per_day
 
@@ -193,3 +195,10 @@ def search_learning_notes(query: str) -> dict:
         "count": len(top_results),
         "results": top_results,
     }
+
+def search_pdf_knowledge_base(query: str) -> dict:
+    """
+    从 PDF 知识库中检索相关内容。
+    当前是占位版本，后续会接入 ChromaDB。
+    """
+    return search_pdf_chunks(query=query, top_k=3)

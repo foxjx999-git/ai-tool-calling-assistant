@@ -4,6 +4,7 @@ from tools import (
     read_learning_logs,
     clear_learning_logs,
     search_learning_notes,
+    search_pdf_knowledge_base,
 )
 
 
@@ -33,6 +34,11 @@ def run_tool(tool_name: str, arguments: dict) -> dict:
         
         if tool_name == "search_learning_notes":
             return search_learning_notes(
+                query=arguments["query"],
+            )
+        
+        if tool_name == "search_pdf_knowledge_base":
+            return search_pdf_knowledge_base(
                 query=arguments["query"],
             )
         

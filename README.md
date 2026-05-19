@@ -22,6 +22,12 @@
 - 支持关键词重合度检索和相关性排序
 - 检索结果包含来源信息，包括文件、笔记 ID 和标题
 - 当本地笔记中没有相关内容时，明确提示未找到，避免假装基于资料回答
+- 支持从 `PDF ChromaDB` 知识库中检索内容
+- 新增 `search_pdf_knowledge_base` 工具
+- 新增 `pdf_rag.py` 负责 `PDF` 向量检索
+- 使用 `OpenAI Embedding` 生成 `query embedding`
+- 使用 `ChromaDB` 检索 `PDF chunks`
+- 回答中返回 `PDF` 文件名和页码来源
 
 ## 技术栈
 
