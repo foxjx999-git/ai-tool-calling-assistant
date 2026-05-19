@@ -8,8 +8,35 @@ load_dotenv()
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH")
 CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "pdf_chunks")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+MIN_PDF_SCORE = float(os.getenv("MIN_PDF_SCORE", "0.55"))
 
 client = OpenAI()
+
+def validate_pdf_rag_config() -> dict:
+    """
+    检查 PDF RAG 相关配置是否完整。
+    """
+    missing = []
+
+    if not CHROMA_DB_PATH:
+        missing.append("CHROMA_DB_PATH")
+
+    if not CHROMA_COLLECTION_NAME:
+        missing.append("CHROMA_COLLECTION_NAME")
+
+    if not EMBEDDING_MODEL:
+        missing.append("EMBEDDING_MODEL")
+
+    if missing:
+        return {
+            "status": "error",
+            "message": f"缺少 PDF RAG 配置：{', '.join(missing)}",
+        }
+
+    return {
+        "status": "success",
+        "message": "PDF RAG 配置完整",
+    }
 
 def get_query_embedding(query: str) -> list[float]:
     """
@@ -23,20 +50,28 @@ def get_query_embedding(query: str) -> list[float]:
 
     return response.data[0].embedding
 
-def search_pdf_chunks(query:str, top_k: int = 3) ->dict:
+def search_pdf_chunks(query: str, top_k: int = 3) -> dict:
     """
     从旧 RAG 项目的 ChromaDB 中检索 PDF chunks。
     """
-    if not CHROMA_DB_PATH:
+    config_check = validate_pdf_rag_config()
+
+    if config_check["status"] == "error":
         return {
             "status": "error",
-            "message": "CHROMA_DB_PATH 未配置，请检查 .env 文件。",
-            "results": [],
+            "message": config_check["message"],
+            "data": {
+                "query": query,
+                "count": 0,
+                "results": [],
+            },
         }
-    
-    chroma_client  = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
-    collection = chroma_client.get_collection(name=CHROMA_COLLECTION_NAME)
+    chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+
+    collection = chroma_client.get_collection(
+        name=CHROMA_COLLECTION_NAME
+    )
 
     query_embedding = get_query_embedding(query)
 
@@ -50,11 +85,22 @@ def search_pdf_chunks(query:str, top_k: int = 3) ->dict:
     distances = result.get("distances", [[]])[0]
     ids = result.get("ids", [[]])[0]
 
+    if not documents:
+        return {
+            "status": "empty",
+            "message": "PDF 知识库中没有找到相关内容",
+            "data": {
+                "query": query,
+                "count": 0,
+                "results": [],
+            },
+        }
+
     results = []
 
     for index, document in enumerate(documents):
         metadata = metadatas[index] if index < len(metadatas) else {}
-        distance = distances[index] if index <len(distances) else None
+        distance = distances[index] if index < len(distances) else None
         chunk_id = ids[index] if index < len(ids) else index
 
         results.append(
@@ -69,9 +115,39 @@ def search_pdf_chunks(query:str, top_k: int = 3) ->dict:
             }
         )
 
+    if not results:
+        return {
+            "status": "empty",
+            "message": "PDF 知识库中没有找到相关内容",
+            "data": {
+                "query": query,
+                "count": 0,
+                "results": [],
+            },
+        }
+
+    filtered_results = [
+        item for item in results
+        if item["score"] is not None and item["score"] >= MIN_PDF_SCORE
+    ]
+
+    if not filtered_results:
+        return {
+            "status": "empty",
+            "message": "PDF 知识库中没有找到足够相关的内容",
+            "data": {
+                "query": query,
+                "count": 0,
+                "results": [],
+            },
+        }
+
     return {
         "status": "success",
-        "query": query,
-        "count": len(results),
-        "results": results,
+        "message": "PDF 知识库检索完成",
+        "data": {
+            "query": query,
+            "count": len(filtered_results),
+            "results": filtered_results,
+        },
     }

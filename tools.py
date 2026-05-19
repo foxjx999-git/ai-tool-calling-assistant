@@ -8,9 +8,13 @@ def calculate_study_hours(days: int, hours_per_day: float) ->dict:
     total_hours = days * hours_per_day
 
     return {
-        "days": days,
-        "hours_per_day": hours_per_day,
-        "total_hours": total_hours
+        "status": "success",
+        "message": "学习总时长计算完成",
+        "data": {
+            "days": days,
+            "hours_per_day": hours_per_day,
+            "total_hours": total_hours,
+        },
     }
 
 def save_learning_log(date: str, topic: str, minutes: int, summary: str) -> dict:
@@ -41,10 +45,12 @@ def save_learning_log(date: str, topic: str, minutes: int, summary: str) -> dict
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(logs, f, ensure_ascii=False, indent=2)
 
-    return{
+    return {
         "status": "success",
         "message": "学习记录已保存",
-        "record": record,
+        "data": {
+            "record": record,
+        },
     }
 
 def read_learning_logs() -> dict:
@@ -56,8 +62,11 @@ def read_learning_logs() -> dict:
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
         return {
             "status": "empty",
-            "count": 0,
-            "logs": [],
+            "message": "暂无学习记录",
+            "data": {
+                "count": 0,
+                "logs": [],
+            },
         }
     
     with open(file_path, "r", encoding="utf-8") as f:
@@ -65,8 +74,11 @@ def read_learning_logs() -> dict:
 
     return {
         "status": "success",
-        "count": len(logs),
-        "logs": logs,
+        "message": "学习记录读取成功",
+        "data": {
+            "count": len(logs),
+            "logs": logs,
+        },
     }
 
 def clear_learning_logs() -> dict:
@@ -82,7 +94,9 @@ def clear_learning_logs() -> dict:
     return {
         "status": "success",
         "message": "学习记录已清空",
-        "logs": [],
+        "data": {
+            "logs": [],
+        },
     }
 
 
@@ -148,8 +162,12 @@ def search_learning_notes(query: str) -> dict:
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
         return {
             "status": "empty",
-            "message": "学习笔记知识库为空",
-            "results": [],
+            "message": "学习笔记知识库为空或文件不存在",
+            "data": {
+                "query": query,
+                "count": 0,
+                "results": [],
+            },
         }
 
     with open(file_path, "r", encoding="utf-8") as f:
@@ -187,13 +205,29 @@ def search_learning_notes(query: str) -> dict:
 
     top_results = scored_results[:3]
 
+    if not top_results:
+        return {
+            "status": "empty",
+            "message": "本地学习笔记中没有找到相关内容",
+            "data": {
+                "query": query,
+                "query_tokens": list(query_tokens),
+                "total_matches": 0,
+                "count": 0,
+                "results": [],
+            },
+        }
+
     return {
         "status": "success",
-        "query": query,
-        "query_tokens": list(query_tokens),
-        "total_matches": len(scored_results),
-        "count": len(top_results),
-        "results": top_results,
+        "message": "学习笔记检索完成",
+        "data": {
+            "query": query,
+            "query_tokens": list(query_tokens),
+            "total_matches": len(scored_results),
+            "count": len(top_results),
+            "results": top_results,
+        },
     }
 
 def search_pdf_knowledge_base(query: str) -> dict:

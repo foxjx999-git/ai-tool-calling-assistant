@@ -27,6 +27,7 @@ SYSTEM_PROMPT = """
 3. 当前项目中的学习笔记检索工具名是 search_learning_notes，不要称为 search_knowledge_base。
 4. 如果 search_learning_notes 返回 count 为 0 或 results 为空，要明确告诉用户本地学习笔记中没有找到相关内容。除非用户明确要求使用通用知识回答，否则不要继续展开通用解释。
 5. 当 search_learning_notes 返回 results 时，回答中应尽量说明来源标题或笔记 ID，例如“根据本地学习笔记《xxx》（ID: x）”。
+6. 如果 search_pdf_knowledge_base 返回 status 为 empty，或 count 为 0，要明确告诉用户 PDF 知识库中没有找到相关内容，不要假装基于 PDF 回答。
 
 错误处理规则：
 1. 如果工具返回 status 为 error，不要假装工具执行成功。

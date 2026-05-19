@@ -23,6 +23,11 @@
 - 检索结果包含来源信息，包括文件、笔记 ID 和标题
 - 当本地笔记中没有相关内容时，明确提示未找到，避免假装基于资料回答
 - 支持从 `PDF ChromaDB` 知识库中检索内容
+- 支持从本地学习笔记 `learning_notes.json` 中检索相关内容
+- 支持从 PDF / ChromaDB 知识库中检索真实 PDF 片段
+- 支持回答中引用 PDF 文件名、页码和 chunk 来源
+- 支持最低相关度阈值过滤，减少不相关检索结果
+- 所有工具返回格式统一为 `status / message / data`
 - 新增 `search_pdf_knowledge_base` 工具
 - 新增 `pdf_rag.py` 负责 `PDF` 向量检索
 - 使用 `OpenAI Embedding` 生成 `query embedding`
@@ -44,13 +49,16 @@
 ai-tool-calling-assistant/
 ├── main.py              # 程序入口，负责命令行交互
 ├── ai_client.py         # AI 调用层，负责 Tool Calling 主流程
+├── prompts.py           # Prompt 配置层，定义 system prompt
 ├── tools.py             # 工具函数层，放真实执行的 Python 函数
 ├── tool_schemas.py      # 工具说明书，定义给模型看的 tools
 ├── tool_runner.py       # 工具分发层，根据 tool_name 调用真实函数
-├── prompts.py           # Prompt 配置层，定义 system prompt
-├── data/                # 本地学习记录数据
+├── pdf_rag.py           # PDF RAG 检索层，连接 ChromaDB 并检索 PDF chunks
+├── data/                # 本地学习记录和学习笔记数据
 ├── .env                 # 环境变量文件，不上传 GitHub
+├── .env.example         # 环境变量模板，可上传 GitHub
 ├── .gitignore
+├── requirements.txt
 └── README.md
 ```
 
@@ -76,6 +84,49 @@ tools.py 执行 Python 函数
 把工具执行结果作为 function_call_output 返回给模型
 ↓
 模型基于工具结果生成最终回答
+```
+
+## 工具返回格式
+
+为了方便 `ai_client.py` 统一处理工具结果，项目中的工具返回值统一采用以下结构：
+
+```python
+{
+    "status": "success | empty | error",
+    "message": "工具执行结果说明",
+    "data": {
+        "具体业务数据": "..."
+    }
+}
+```
+其中：
+
+- success 表示工具执行成功
+- empty 表示工具执行成功，但没有找到相关数据
+- error 表示工具执行失败，需要由程序或用户处理
+
+例如，PDF RAG 检索工具成功时会返回：
+
+```python
+{
+    "status": "success",
+    "message": "PDF 知识库检索完成",
+    "data": {
+        "query": "人工智能时代的职业选择",
+        "count": 3,
+        "results": [
+            {
+                "score": 0.61,
+                "source": {
+                    "file": "03_人工智能大发展下的职业选择.pdf",
+                    "page": 1,
+                    "chunk_id": "..."
+                },
+                "content": "PDF 中检索到的相关片段..."
+            }
+        ]
+    }
+}
 ```
 
 ## 当前工具
@@ -192,6 +243,23 @@ clear_learning_logs
 - 笔记标题 `source.title`
 - 笔记内容 `content`
 
+### 6. `search_pdf_knowledge_base`
+
+用于从 PDF / ChromaDB 知识库中检索相关 PDF 片段。
+
+该工具会调用 `pdf_rag.py` 中的检索逻辑：
+
+1. 使用 OpenAI Embedding 将用户问题转换成向量
+2. 连接旧 RAG 项目的 ChromaDB 向量库
+3. 在 `pdf_chunks` collection 中检索相关 PDF chunks
+4. 返回相关片段、相似度分数、PDF 文件名、页码和 chunk ID
+
+示例：
+
+```text
+这份 PDF 里怎么解释人工智能时代的职业选择？
+```
+
 ## 多工具调用示例
 
 用户输入：
@@ -230,12 +298,12 @@ pip install openai python-dotenv
 
 ### 3. 配置环境变量
 
-新建 `.env` 文件：
+项目不会上传真实 `.env` 文件。请复制 `.env.example` 并重命名为 `.env`：
 
-```env
-OPENAI_API_KEY=你的 API Key
-OPENAI_MODEL=gpt-4.1
+```bash
+copy .env.example .env
 ```
+然后在 `.env` 中填写自己的 `OpenAI API Key` 和 `ChromaDB` 路径。
 
 ### 4. 运行项目
 
@@ -275,10 +343,12 @@ quit
 - 保存记录这类写操作需要确保用户信息完整
 - 清空记录这类破坏性操作需要二次确认
 - 工具分发逻辑要放在未知工具处理之前，否则对应工具永远不会执行
-- `RAG` 检索可以被封装成 `Tool Calling` 中的一个工具
-- 检索工具不仅要返回内容，也应该返回来源信息
-- 当检索不到内容时，要明确说明本地知识库没有相关资料
-- 关键词重合度检索是向量检索前的简化版检索思想
+- RAG 检索可以被封装成 Tool Calling 中的一个工具
+- 可以通过 `search_pdf_knowledge_base` 让 Agent 按需检索 PDF 知识库
+- 查询 PDF 向量库时，query embedding 的模型必须和入库时使用的 embedding 模型一致
+- 使用 `get_collection` 比 `get_or_create_collection` 更适合读取已有知识库，避免误创建空 collection
+- 工具返回格式统一为 `status / message / data` 后，主流程更容易处理成功、空结果和错误
+- 检索工具应返回来源信息，例如文件名、页码、chunk ID，方便回答时引用来源
 
 ## 后续计划
 
