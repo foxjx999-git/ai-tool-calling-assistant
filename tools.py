@@ -82,3 +82,114 @@ def clear_learning_logs() -> dict:
         "message": "学习记录已清空",
         "logs": [],
     }
+
+
+def tokenize_text(text: str) -> set:
+    """
+    简单分词函数：
+    把文本转成小写，并按常见分隔符拆成关键词集合。
+    """
+    separators = [
+        " ",
+        "，",
+        "。",
+        "？",
+        "?",
+        "！",
+        "!",
+        "、",
+        "：",
+        ":",
+        "；",
+        ";",
+        "（",
+        "）",
+        "(",
+        ")",
+        "\n",
+    ]
+
+    text = text.lower()
+
+    for sep in separators:
+        text = text.replace(sep, " ")
+
+    words = text.split()
+
+    stop_words = {
+        "的",
+        "了",
+        "和",
+        "是",
+        "什么",
+        "怎么",
+        "如何",
+        "一下",
+        "请问",
+        "有",
+    }
+
+    return {
+        word for word in words
+        if word and word not in stop_words
+    }
+
+
+
+def search_learning_notes(query: str) -> dict:
+    """
+    从本地 learning_notes.json 中检索学习笔记。
+    简单相似度版：根据关键词重合度排序。
+    """
+    file_path = "data/learning_notes.json"
+
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        return {
+            "status": "empty",
+            "message": "学习笔记知识库为空",
+            "results": [],
+        }
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        notes = json.load(f)
+
+    query_tokens = tokenize_text(query)
+
+    scored_results = []
+
+    for note in notes:
+        title = note.get("title", "")
+        content = note.get("content", "")
+        note_text = f"{title} {content}"
+
+        note_tokens = tokenize_text(note_text)
+
+        overlap = query_tokens & note_tokens
+        score = len(overlap)
+
+        if score > 0:
+            scored_results.append(
+                {
+                    "score": score,
+                    "matched_keywords": list(overlap),
+                    "source": {
+                        "file": "data/learning_notes.json",
+                        "id": note.get("id"),
+                        "title": note.get("title"),
+                    },
+                    "content": content,
+                }
+            )
+
+    scored_results.sort(key=lambda item: item["score"], reverse=True)
+
+    top_results = scored_results[:3]
+
+    return {
+        "status": "success",
+        "query": query,
+        "query_tokens": list(query_tokens),
+        "total_matches": len(scored_results),
+        "count": len(top_results),
+        "results": top_results,
+    }

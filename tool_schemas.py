@@ -81,4 +81,25 @@ tools = [
         },
         "strict": True,
     },
+    {
+        "type": "function",
+        "name": "search_learning_notes",
+        "description": (
+            "从本地学习笔记知识库中检索相关内容。"
+            "当用户询问 Tool Calling、RAG、tools、tools.py、tool_schemas.py、tool_runner.py、工具说明书、工具函数、工具调用流程、RAG 和 Tool Calling 结合等本项目学习概念时，使用这个工具。"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "用户想检索的学习主题或问题关键词。",
+                },
+            },
+            "required": ["query"],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
+    
 ]

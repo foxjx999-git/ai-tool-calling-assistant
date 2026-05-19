@@ -3,6 +3,7 @@ from tools import (
     save_learning_log, 
     read_learning_logs,
     clear_learning_logs,
+    search_learning_notes,
 )
 
 
@@ -29,6 +30,11 @@ def run_tool(tool_name: str, arguments: dict) -> dict:
             return read_learning_logs()
         if tool_name == "clear_learning_logs":
             return clear_learning_logs()
+        
+        if tool_name == "search_learning_notes":
+            return search_learning_notes(
+                query=arguments["query"],
+            )
         
         return {
             "status": "error",
