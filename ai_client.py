@@ -5,6 +5,8 @@ from openai import OpenAI
 
 from tool_runner import run_tool
 from tool_schemas import tools
+from prompts import SYSTEM_PROMPT
+
 
 load_dotenv()
 
@@ -32,16 +34,7 @@ def ask_ai(user_input: str) -> str:
     input_list = [
         {
             "role": "system",
-            "content": (
-                "你是一个 AI 应用工程师学习助手。"
-                "你可以回答学习问题，也可以在需要时调用工具。"
-                "当用户要求计算学习时长时，使用 calculate_study_hours。"
-                "当用户要求记录学习进度时，使用 save_learning_log。"
-                "当用户要求查看或总结学习记录时，使用 read_learning_logs。"
-                "当用户要求记录学习进度，但缺少学习时长、主题或总结时，不要调用 save_learning_log，要先追问用户补充信息。"
-                "如果工具返回 status 为 error，不要假装工具执行成功，要把错误原因告诉用户。"
-                "最终回答要用中文，简洁清楚。"
-            ),
+            "content": SYSTEM_PROMPT,
         },
         {
             "role": "user",

@@ -64,4 +64,21 @@ tools = [
         },
         "strict": True,
     },
+    {
+        "type": "function",
+        "name": "clear_learning_logs",
+        "descriptiopn": (
+            "清空用户所有学习记录。"
+            "这是不可恢复的破坏性操作。"
+            "只有当用户明确输入“确认清空学习记录”或“确认清空”时，才可以调用这个工具。"
+            "如果用户只是说“清空我的学习记录”或“删除学习记录”，不要调用工具，应先要求用户确认。"
+        ),
+        "parameters":{
+            "type": "object",
+            "properties": {},
+            "required":[],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
 ]

@@ -1,4 +1,9 @@
-from tools import calculate_study_hours, save_learning_log, read_learning_logs
+from tools import (
+    calculate_study_hours, 
+    save_learning_log, 
+    read_learning_logs,
+    clear_learning_logs,
+)
 
 
 def run_tool(tool_name: str, arguments: dict) -> dict:
@@ -22,9 +27,14 @@ def run_tool(tool_name: str, arguments: dict) -> dict:
             )
         if tool_name =="read_learning_logs":
             return read_learning_logs()
+        if tool_name == "clear_learning_logs":
+            return clear_learning_logs()
+        
         return {
-            "error": f"未知工具：{tool_name}"
-        }
+            "status": "error",
+            "message": f"未知工具：{tool_name}",
+        }  
+        
     except KeyError as e:
         return {
             "status": "error",

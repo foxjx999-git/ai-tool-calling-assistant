@@ -66,3 +66,19 @@ def read_learning_logs() -> dict:
         "count": len(logs),
         "logs": logs,
     }
+
+def clear_learning_logs() -> dict:
+    """
+    清空所有学习记录。
+    """
+    os.makedirs("data",exist_ok=True)
+    file_path = "data/learning_log.json"
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump([], f, ensure_ascii=False, indent=2)
+
+    return {
+        "status": "success",
+        "message": "学习记录已清空",
+        "logs": [],
+    }
