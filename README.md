@@ -28,11 +28,11 @@
 - 支持回答中引用 PDF 文件名、页码和 chunk 来源
 - 支持最低相关度阈值过滤，减少不相关检索结果
 - 所有工具返回格式统一为 `status / message / data`
-- 新增 `search_pdf_knowledge_base` 工具
-- 新增 `pdf_rag.py` 负责 `PDF` 向量检索
-- 使用 `OpenAI Embedding` 生成 `query embedding`
-- 使用 `ChromaDB` 检索 `PDF chunks`
-- 回答中返回 `PDF` 文件名和页码来源
+- 新增 Streamlit Web 页面
+- 支持页面聊天
+- 支持工具调用过程展示
+- 支持 PDF 检索来源展示
+- 支持清空当前对话
 
 ## 技术栈
 
@@ -48,6 +48,7 @@
 ```text
 ai-tool-calling-assistant/
 ├── main.py              # 程序入口，负责命令行交互
+├── app.py               # 本项目streamlit 入口
 ├── ai_client.py         # AI 调用层，负责 Tool Calling 主流程
 ├── prompts.py           # Prompt 配置层，定义 system prompt
 ├── tools.py             # 工具函数层，放真实执行的 Python 函数
@@ -324,6 +325,12 @@ q
 quit
 ```
 
+streamlit网页版运行：
+
+```bash
+python app.py
+```
+
 ## 核心学习点
 
 通过这个项目，重点理解了：
@@ -356,5 +363,4 @@ quit
 
 - 增加更多学习工具
 - 增加学习计划生成工具
-- 增加 `Streamlit` 页面
 - 部署为在线 `AI` 学习助手
